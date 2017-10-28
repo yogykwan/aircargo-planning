@@ -127,8 +127,12 @@ class AirCargoProblem(Problem):
             e.g. 'FTTTFF'
         :return: list of Action objects
         """
-        # TODO implement
         possible_actions = []
+        kb = PropKB()
+        kb.tell(decode_state(state, self.state_map).pos_sentence())
+        for action in self.actions_list:
+            if set(action.precond_pos) == set(kb.clauses) and not (set(action.precond_neg) & set(kb.clauses)):
+                possible_actions.append(action)
         return possible_actions
 
     def result(self, state: str, action: Action):
@@ -140,8 +144,10 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
-        # TODO implement
-        new_state = FluentState([], [])
+        old_state = decode_state(state, self.state_map)
+        pos = set(old_state.pos) | set(action.effect_add) - set(action.effect_rem)
+        neg = set(old_state.neg) | set(action.effect_rem) - set(action.effect_add)
+        new_state = FluentState(list(pos), list(neg))
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
